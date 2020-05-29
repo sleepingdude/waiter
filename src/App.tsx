@@ -1,25 +1,95 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import "./App.css";
+import { Fetcher } from "./Fetcher/Fetcher";
+import { FetcherProvider } from "./Fetcher/FetcherProvider";
+import { toRequest } from "./Fetcher/toRequest";
+
+type User = {
+  id: string;
+  name: string;
+};
+
+const fetchUser = async (id: string): Promise<User> => {
+  return await new Promise((resolve) =>
+    setTimeout(() => resolve({ id, name: "UserName" }), 2000)
+  );
+};
+
+type Post = {
+  id: number;
+  text: string;
+};
+
+const fetchPost = async (id: number): Promise<Post[]> => {
+  return await new Promise((resolve) =>
+    setTimeout(() => resolve([{ id, text: "Post" }]), 2000)
+  );
+};
+
+type Message = {
+  id: number;
+  message: string;
+};
+
+const fetchMessages = async (id: number): Promise<Message[]> => {
+  return await new Promise((resolve) =>
+    setTimeout(() => resolve([{ id, message: "Message" }]), 2000)
+  );
+};
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+    <FetcherProvider>
+      <div className="App">
+        <Fetcher
+          requests={{
+            user: toRequest(fetchUser, "userId"),
+            posts: toRequest(fetchPost, 111)
+          }}
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+          {({ data }) => {
+            return (
+              <div>
+                User and Posts:
+                {JSON.stringify(data)}
+                <Fetcher
+                  requests={{
+                    messages: toRequest(fetchMessages, 1111)
+                  }}
+                >
+                  {({ data, update }) => {
+                    return (
+                      <div
+                        onClick={() => {
+                          update.messages([...data.messages, ...data.messages]);
+                        }}
+                      >
+                        Click for update Messages:
+                        {JSON.stringify(data)}
+                        <Fetcher
+                          requests={{
+                            posts: toRequest(fetchPost, 111)
+                          }}
+                        >
+                          {({ data }) => {
+                            return (
+                              <div>
+                                Cashed Posts
+                                {JSON.stringify(data)}
+                              </div>
+                            );
+                          }}
+                        </Fetcher>
+                      </div>
+                    );
+                  }}
+                </Fetcher>
+              </div>
+            );
+          }}
+        </Fetcher>
+      </div>
+    </FetcherProvider>
   );
 }
 
