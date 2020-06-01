@@ -46,6 +46,7 @@ function App() {
             user: toRequest(fetchUser, "userId"),
             posts: toRequest(fetchPost, 111)
           }}
+          renderLoader={() => <div>Loading</div>}
         >
           {({ data }) => {
             return (
@@ -56,6 +57,7 @@ function App() {
                   requests={{
                     messages: toRequest(fetchMessages, 1111)
                   }}
+                  renderLoader={() => <div>Loading</div>}
                 >
                   {({ data, update }) => {
                     return (
@@ -70,8 +72,11 @@ function App() {
                           requests={{
                             posts: toRequest(fetchPost, 111)
                           }}
+                          renderLoader={() => <div>Loading</div>}
+                          renderRuntimeError={() => <div>Ohhh</div>}
                         >
                           {({ data }) => {
+                            throw new Error("error");
                             return (
                               <div>
                                 Cashed Posts

@@ -1,11 +1,15 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { StoreContext } from "./context";
 import { useLocalData } from "./useLocalData";
 import { ChildrenData, ChildrenMeta, ChildrenUpdate, Requests } from "./types";
 import { useLocalMeta } from "./useLocalMeta";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 interface Props<R extends Requests> {
   requests: R;
+  renderLoader?: () => React.ReactNode;
+  renderErrors?: (errors: Error[]) => React.ReactNode;
+  renderRuntimeError?: (error: Error) => React.ReactNode;
   children(props: {
     data: ChildrenData<R>;
     update: ChildrenUpdate<R>;
@@ -16,7 +20,10 @@ interface Props<R extends Requests> {
 
 export function Fetcher<R extends Requests = Requests>({
   requests,
-  children
+  children,
+  renderErrors,
+  renderLoader,
+  renderRuntimeError
 }: Props<R>): React.FunctionComponentElement<Props<R>> {
   const requestsKeys = Object.keys(requests);
   const requestsEntries = Object.entries(requests);
@@ -38,22 +45,35 @@ export function Fetcher<R extends Requests = Requests>({
     ([storeName]) => !localMeta[storeName] || localMeta[storeName]?.isFetching
   );
 
-  const errors = requestsEntries
+  const errors: Error[] = requestsEntries
     .map(([storeName]) => localMeta[storeName]?.error)
-    .filter(Boolean);
+    .filter((v): v is Error => !!v);
 
   useEffect(() => {
     call(requests);
   }, []);
 
-  return loading ? (
-    <div>loading</div>
-  ) : errors.length ? (
-    <div style={{ textAlign: "center", paddingTop: 30, color: "red" }}>
-      {errors}
-      "Sorry, something weng wrong"
-    </div>
-  ) : localData ? (
-    children({ data: localData, update, loading, error: errors[0] })
-  ) : null;
+  if (renderRuntimeError) {
+    return (
+      <ErrorBoundary renderError={renderRuntimeError}>
+        <>
+          {renderLoader && loading
+            ? renderLoader()
+            : errors.length && renderErrors
+            ? renderErrors(errors)
+            : localData
+            ? children({ data: localData, update, loading, error: errors[0] })
+            : null}
+        </>
+      </ErrorBoundary>
+    );
+  } else {
+    return renderLoader && loading
+      ? renderLoader()
+      : renderErrors && errors.length
+      ? renderErrors(errors)
+      : localData
+      ? children({ data: localData, update, loading, error: errors[0] })
+      : null;
+  }
 }
