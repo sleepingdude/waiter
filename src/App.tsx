@@ -57,10 +57,16 @@ function App() {
           {({ data, meta }) => {
             return (
               <div>
-                User and Post Meta:
-                {JSON.stringify(meta)}
-                User and Post Data:
-                {JSON.stringify(data)}
+                <h4>Data:</h4>
+                User:
+                {JSON.stringify(data.user)}
+                Post:
+                {JSON.stringify(data.posts)}
+                <h4>Meta:</h4>
+                User:
+                {JSON.stringify(meta.user)}
+                Post:
+                {JSON.stringify(meta.posts)}
                 <Waiter
                   requests={{
                     messages: toRequest(fetchMessages, 1111)
