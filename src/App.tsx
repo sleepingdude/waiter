@@ -93,12 +93,28 @@ function App() {
                           {({ data }) => {
                             return (
                               <div>
-                                {(() => {
-                                  throw new Error("error");
-                                  return null;
-                                })()}
                                 Cashed Posts
                                 {JSON.stringify(data)}
+                                <Waiter
+                                  requests={{
+                                    user: toRequest(fetchUser, "111")
+                                  }}
+                                  renderLoader={Loader}
+                                  renderErrors={Errors}
+                                >
+                                  {({ data }) => {
+                                    return (
+                                      <div>
+                                        {(() => {
+                                          throw new Error("error");
+                                          return null;
+                                        })()}
+                                        Cashed User
+                                        {JSON.stringify(data)}
+                                      </div>
+                                    );
+                                  }}
+                                </Waiter>
                               </div>
                             );
                           }}
