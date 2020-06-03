@@ -1,37 +1,11 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { StoreContext } from "./context";
-import { StateMeta } from "./types";
 
-const getInitialLocalMeta = (meta: StateMeta, storeNames: string[]) => {
-  return storeNames.reduce((localMeta, storeName) => {
-    localMeta[storeName] = meta[storeName];
-
-    return localMeta;
-  }, {} as StateMeta);
-};
-
-export function useLocalMeta(storeNames: string[]) {
+export function useError(...storeNames: string[]) {
   const { meta } = useContext(StoreContext);
-  const [localMeta, setLocalMeta] = useState(
-    getInitialLocalMeta(meta, storeNames)
-  );
-  const staticStoreName = storeNames.join(",");
-  useEffect(() => {
-    const newLocalState = { ...localMeta };
-    let isChanged = false;
+  const index = storeNames.findIndex((storeName) => meta[storeName]?.error);
 
-    Object.keys(localMeta).forEach((key) => {
-      if (meta[key] !== newLocalState[key]) {
-        isChanged = true;
-
-        newLocalState[key] = meta[key];
-      }
-    });
-
-    if (isChanged) {
-      setLocalMeta(newLocalState);
-    }
-  }, [meta, staticStoreName]);
-
-  return localMeta;
+  return index > -1
+    ? meta[storeNames[index] as keyof typeof meta]?.error
+    : null;
 }

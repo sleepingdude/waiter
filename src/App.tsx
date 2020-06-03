@@ -1,7 +1,7 @@
 import React from "react";
 import "./App.css";
 import { Waiter } from "./Waiter/Waiter";
-import { Provider } from "./Waiter/Provider";
+import { WaiterProvider } from "./Waiter/WaiterProvider";
 import { toRequest } from "./Waiter/toRequest";
 
 type User = {
@@ -37,31 +37,38 @@ const fetchMessages = async (id: number): Promise<Message[]> => {
   );
 };
 
+const Loader = () => <div style={{ color: "gold" }}>Loading</div>;
+const Errors = (...errors: Error[]) => (
+  <div style={{ color: "red" }}>{errors.map((e) => e.toString())}</div>
+);
+
 function App() {
   return (
-    <Provider>
+    <WaiterProvider>
       <div className="App">
         <Waiter
           requests={{
             user: toRequest(fetchUser, "userId"),
             posts: toRequest(fetchPost, 111)
           }}
-          renderLoader={() => <div>Loading</div>}
+          renderLoader={Loader}
+          renderErrors={Errors}
         >
-          {({ data }) => {
-            console.log("rerender 1");
+          {({ data, meta }) => {
             return (
               <div>
-                User and Posts:
+                User and Post Meta:
+                {JSON.stringify(meta)}
+                User and Post Data:
                 {JSON.stringify(data)}
                 <Waiter
                   requests={{
                     messages: toRequest(fetchMessages, 1111)
                   }}
-                  renderLoader={() => <div>Loading</div>}
+                  renderLoader={Loader}
+                  renderErrors={Errors}
                 >
                   {({ data, update }) => {
-                    console.log("rerender 2");
                     return (
                       <div
                         onClick={() => {
@@ -74,11 +81,10 @@ function App() {
                           requests={{
                             posts: toRequest(fetchPost, 111)
                           }}
-                          renderLoader={() => <div>Loading</div>}
-                          renderRuntimeError={() => <div>Ohhh</div>}
+                          renderLoader={Loader}
+                          renderErrors={Errors}
                         >
                           {({ data }) => {
-                            console.log("rerender 3");
                             return (
                               <div>
                                 {(() => {
@@ -100,7 +106,7 @@ function App() {
           }}
         </Waiter>
       </div>
-    </Provider>
+    </WaiterProvider>
   );
 }
 

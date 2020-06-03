@@ -7,32 +7,32 @@ import { ErrorBoundary } from "./ErrorBoundary";
 
 interface Props<R extends Requests> {
   requests: R;
-  renderLoader?: () => React.ReactNode;
-  renderErrors?: (errors: Error[]) => React.ReactNode;
-  renderRuntimeError?: (error: Error) => React.ReactNode;
+  renderLoader: () => React.ReactNode;
+  renderErrors: (...errors: Error[]) => React.ReactNode;
   children(props: {
     data: ChildrenData<R>;
+    meta: ChildrenMeta<R>;
     update: ChildrenUpdate<R>;
     loading: boolean;
     error: any;
   }): React.ReactNode;
 }
 
-const Render: React.FC<any> = ({
-  renderLoader,
+const Content: React.FC<any> = ({
   loading,
+  renderLoader,
   renderErrors,
   errors,
   children,
   data,
-  update
+  ...props
 }) => {
-  return renderLoader && loading
+  return loading
     ? renderLoader()
-    : renderErrors && errors.length
-    ? renderErrors(errors)
+    : errors.length
+    ? renderErrors(...errors)
     : data
-    ? children({ data, update, loading, error: errors })
+    ? children({ data, ...props })
     : null;
 };
 
@@ -71,9 +71,10 @@ export function Main<R extends Requests = Requests>({
   }, []);
 
   return (
-    <Render
+    <Content
       {...{
         data,
+        meta,
         loading,
         children,
         errors,
@@ -85,17 +86,12 @@ export function Main<R extends Requests = Requests>({
   );
 }
 
-export function Waiter<R extends Requests = Requests>({
-  renderRuntimeError,
-  ...props
-}: Props<R>): React.FunctionComponentElement<Props<R>> {
-  if (renderRuntimeError) {
-    return (
-      <ErrorBoundary renderError={renderRuntimeError}>
-        <Main {...props} />
-      </ErrorBoundary>
-    );
-  } else {
-    return <Main {...props} />;
-  }
+export function Waiter<R extends Requests = Requests>(
+  props: Props<R>
+): React.FunctionComponentElement<Props<R>> {
+  return (
+    <ErrorBoundary renderError={props.renderErrors}>
+      <Main {...props} />
+    </ErrorBoundary>
+  );
 }

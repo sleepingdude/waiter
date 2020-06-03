@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { StoreContext } from "./context";
 import { State, Requests, StateData, StateMeta } from "./types";
 
-export const Provider: React.FC<{}> = ({ children }) => {
+export const WaiterProvider: React.FC<{}> = ({ children }) => {
   const [state, setState] = useState<State>({ data: {}, meta: {} });
 
   const setData = (data: StateData) => {
