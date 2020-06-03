@@ -10,12 +10,12 @@ export type StateMeta = {
   [storeName: string]: StateMetaItem;
 };
 
-export interface FetcherState {
+export interface State {
   data: Readonly<StateData>;
   meta: Readonly<StateMeta>;
 }
 
-export interface FetcherMethods {
+export interface Methods {
   setData(data: StateData): void;
   call(requests: Requests): void;
 }

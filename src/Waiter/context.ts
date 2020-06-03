@@ -1,7 +1,7 @@
 import { createContext } from "react";
-import { FetcherMethods, FetcherState } from "./types";
+import { Methods, State } from "./types";
 
-export const initialState: FetcherState & FetcherMethods = {
+export const initialState: State & Methods = {
   data: {},
   meta: {},
   setData: () => {},

@@ -1,8 +1,8 @@
 import React, { useContext, useEffect } from "react";
 import { StoreContext } from "./context";
-import { useLocalData } from "./useLocalData";
+import { useData } from "./useData";
 import { ChildrenData, ChildrenMeta, ChildrenUpdate, Requests } from "./types";
-import { useLocalMeta } from "./useLocalMeta";
+import { useMeta } from "./useMeta";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 interface Props<R extends Requests> {
@@ -15,23 +15,40 @@ interface Props<R extends Requests> {
     update: ChildrenUpdate<R>;
     loading: boolean;
     error: any;
-  }): any;
+  }): React.ReactNode;
 }
 
-export function Fetcher<R extends Requests = Requests>({
+const Render: React.FC<any> = ({
+  renderLoader,
+  loading,
+  renderErrors,
+  errors,
+  children,
+  data,
+  update
+}) => {
+  return renderLoader && loading
+    ? renderLoader()
+    : renderErrors && errors.length
+    ? renderErrors(errors)
+    : data
+    ? children({ data, update, loading, error: errors })
+    : null;
+};
+
+export function Main<R extends Requests = Requests>({
   requests,
   children,
   renderErrors,
-  renderLoader,
-  renderRuntimeError
+  renderLoader
 }: Props<R>): React.FunctionComponentElement<Props<R>> {
   const requestsKeys = Object.keys(requests);
   const requestsEntries = Object.entries(requests);
 
   const { setData, call } = useContext(StoreContext);
 
-  const localMeta = useLocalMeta(requestsKeys) as ChildrenMeta<R>;
-  const localData = useLocalData(requestsKeys) as ChildrenData<R>;
+  const meta = useMeta(requestsKeys) as ChildrenMeta<R>;
+  const data = useData(requestsKeys) as ChildrenData<R>;
 
   const update = requestsEntries.reduce((acc, [storeName]) => {
     acc[storeName] = (data: any) => {
@@ -42,38 +59,43 @@ export function Fetcher<R extends Requests = Requests>({
   }, {} as any);
 
   const loading = requestsEntries.some(
-    ([storeName]) => !localMeta[storeName] || localMeta[storeName]?.isFetching
+    ([storeName]) => !meta[storeName] || meta[storeName]?.isFetching
   );
 
   const errors: Error[] = requestsEntries
-    .map(([storeName]) => localMeta[storeName]?.error)
+    .map(([storeName]) => meta[storeName]?.error)
     .filter((v): v is Error => !!v);
 
   useEffect(() => {
     call(requests);
   }, []);
 
+  return (
+    <Render
+      {...{
+        data,
+        loading,
+        children,
+        errors,
+        update,
+        renderLoader,
+        renderErrors
+      }}
+    />
+  );
+}
+
+export function Waiter<R extends Requests = Requests>({
+  renderRuntimeError,
+  ...props
+}: Props<R>): React.FunctionComponentElement<Props<R>> {
   if (renderRuntimeError) {
     return (
       <ErrorBoundary renderError={renderRuntimeError}>
-        <>
-          {renderLoader && loading
-            ? renderLoader()
-            : errors.length && renderErrors
-            ? renderErrors(errors)
-            : localData
-            ? children({ data: localData, update, loading, error: errors[0] })
-            : null}
-        </>
+        <Main {...props} />
       </ErrorBoundary>
     );
   } else {
-    return renderLoader && loading
-      ? renderLoader()
-      : renderErrors && errors.length
-      ? renderErrors(errors)
-      : localData
-      ? children({ data: localData, update, loading, error: errors[0] })
-      : null;
+    return <Main {...props} />;
   }
 }

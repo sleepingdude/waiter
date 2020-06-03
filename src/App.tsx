@@ -1,8 +1,8 @@
 import React from "react";
 import "./App.css";
-import { Fetcher } from "./Fetcher/Fetcher";
-import { FetcherProvider } from "./Fetcher/FetcherProvider";
-import { toRequest } from "./Fetcher/toRequest";
+import { Waiter } from "./Waiter/Waiter";
+import { Provider } from "./Waiter/Provider";
+import { toRequest } from "./Waiter/toRequest";
 
 type User = {
   id: string;
@@ -39,9 +39,9 @@ const fetchMessages = async (id: number): Promise<Message[]> => {
 
 function App() {
   return (
-    <FetcherProvider>
+    <Provider>
       <div className="App">
-        <Fetcher
+        <Waiter
           requests={{
             user: toRequest(fetchUser, "userId"),
             posts: toRequest(fetchPost, 111)
@@ -49,17 +49,19 @@ function App() {
           renderLoader={() => <div>Loading</div>}
         >
           {({ data }) => {
+            console.log("rerender 1");
             return (
               <div>
                 User and Posts:
                 {JSON.stringify(data)}
-                <Fetcher
+                <Waiter
                   requests={{
                     messages: toRequest(fetchMessages, 1111)
                   }}
                   renderLoader={() => <div>Loading</div>}
                 >
                   {({ data, update }) => {
+                    console.log("rerender 2");
                     return (
                       <div
                         onClick={() => {
@@ -68,7 +70,7 @@ function App() {
                       >
                         Click for update Messages:
                         {JSON.stringify(data)}
-                        <Fetcher
+                        <Waiter
                           requests={{
                             posts: toRequest(fetchPost, 111)
                           }}
@@ -76,25 +78,29 @@ function App() {
                           renderRuntimeError={() => <div>Ohhh</div>}
                         >
                           {({ data }) => {
-                            throw new Error("error");
+                            console.log("rerender 3");
                             return (
                               <div>
+                                {(() => {
+                                  throw new Error("error");
+                                  return null;
+                                })()}
                                 Cashed Posts
                                 {JSON.stringify(data)}
                               </div>
                             );
                           }}
-                        </Fetcher>
+                        </Waiter>
                       </div>
                     );
                   }}
-                </Fetcher>
+                </Waiter>
               </div>
             );
           }}
-        </Fetcher>
+        </Waiter>
       </div>
-    </FetcherProvider>
+    </Provider>
   );
 }
 

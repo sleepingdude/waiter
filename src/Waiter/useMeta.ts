@@ -10,7 +10,7 @@ const getInitialLocalMeta = (meta: StateMeta, storeNames: string[]) => {
   }, {} as StateMeta);
 };
 
-export function useLocalMeta(storeNames: string[]) {
+export function useMeta(storeNames: string[]) {
   const { meta } = useContext(StoreContext);
   const [localMeta, setLocalMeta] = useState(
     getInitialLocalMeta(meta, storeNames)

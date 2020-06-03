@@ -10,7 +10,7 @@ const getInitialData = (data: StateData, storeNames: string[]) => {
   }, {} as StateData);
 };
 
-export function useLocalData(storeNames: string[]) {
+export function useData(storeNames: string[]) {
   const { data } = useContext(StoreContext);
   const [localData, setLocalData] = useState(getInitialData(data, storeNames));
   const staticStoreName = storeNames.join(",");

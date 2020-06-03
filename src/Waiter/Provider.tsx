@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { StoreContext } from "./context";
-import { FetcherState, Requests, StateData, StateMeta } from "./types";
+import { State, Requests, StateData, StateMeta } from "./types";
 
-export const FetcherProvider: React.FC<{}> = ({ children }) => {
-  const [state, setState] = useState<FetcherState>({ data: {}, meta: {} });
+export const Provider: React.FC<{}> = ({ children }) => {
+  const [state, setState] = useState<State>({ data: {}, meta: {} });
 
   const setData = (data: StateData) => {
     setState((prevState) => {
@@ -33,16 +33,34 @@ export const FetcherProvider: React.FC<{}> = ({ children }) => {
             return state.data[storeName];
           }
 
-          setMeta({ [storeName]: { isFetching: true, error: null } });
+          setState((prevState) => ({
+            ...prevState,
+            meta: {
+              ...prevState.meta,
+              [storeName]: { isFetching: true, error: null }
+            }
+          }));
 
           const result = await request(...args);
 
-          setData({ [storeName]: result });
-          setMeta({ [storeName]: { isFetching: false, error: null } });
+          setState((prevState) => ({
+            ...prevState,
+            data: { ...prevState.data, [storeName]: result },
+            meta: {
+              ...prevState.meta,
+              [storeName]: { isFetching: false, error: null }
+            }
+          }));
 
           return result;
         } catch (error) {
-          setMeta({ [storeName]: { isFetching: true, error } });
+          setState((prevState) => ({
+            ...prevState,
+            meta: {
+              ...prevState.meta,
+              [storeName]: { isFetching: false, error }
+            }
+          }));
           console.error(error);
         }
       })
