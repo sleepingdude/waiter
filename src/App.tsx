@@ -55,6 +55,7 @@ function App() {
           renderErrors={Errors}
         >
           {({ data, meta }) => {
+            console.log("render 1");
             return (
               <div>
                 <h4>Data:</h4>
@@ -75,6 +76,7 @@ function App() {
                   renderErrors={Errors}
                 >
                   {({ data, update }) => {
+                    console.log("render 2");
                     return (
                       <div
                         onClick={() => {
@@ -91,30 +93,51 @@ function App() {
                           renderErrors={Errors}
                         >
                           {({ data }) => {
+                            console.log("render 3");
                             return (
                               <div>
-                                Cashed Posts
-                                {JSON.stringify(data)}
-                                <Waiter
-                                  requests={{
-                                    user: toRequest(fetchUser, "111")
-                                  }}
-                                  renderLoader={Loader}
-                                  renderErrors={Errors}
-                                >
-                                  {({ data }) => {
-                                    return (
-                                      <div>
-                                        {(() => {
-                                          throw new Error("error");
-                                          return null;
-                                        })()}
-                                        Cashed User
-                                        {JSON.stringify(data)}
-                                      </div>
-                                    );
-                                  }}
-                                </Waiter>
+                                <div>
+                                  Cashed Posts
+                                  {JSON.stringify(data)}
+                                </div>
+                                <div style={{ display: "flex" }}>
+                                  <Waiter
+                                    requests={{
+                                      user: toRequest(fetchUser, "111")
+                                    }}
+                                    renderLoader={Loader}
+                                    renderErrors={Errors}
+                                  >
+                                    {({ data }) => {
+                                      return (
+                                        <div style={{ width: "50%" }}>
+                                          {(() => {
+                                            throw new Error("error");
+                                            return null;
+                                          })()}
+                                          Cashed User
+                                          {JSON.stringify(data)}
+                                        </div>
+                                      );
+                                    }}
+                                  </Waiter>
+                                  <Waiter
+                                    requests={{
+                                      messages: toRequest(fetchMessages, 11)
+                                    }}
+                                    renderLoader={Loader}
+                                    renderErrors={Errors}
+                                  >
+                                    {({ data }) => {
+                                      return (
+                                        <div style={{ width: "50%" }}>
+                                          Cashed messages
+                                          {JSON.stringify(data)}
+                                        </div>
+                                      );
+                                    }}
+                                  </Waiter>
+                                </div>
                               </div>
                             );
                           }}

@@ -11,27 +11,35 @@ const getInitialLocalMeta = (meta: StateMeta, storeNames: string[]) => {
 };
 
 export function useMeta(storeNames: string[]) {
-  const { meta } = useContext(StoreContext);
+  const { store } = useContext(StoreContext);
   const [localMeta, setLocalMeta] = useState(
-    getInitialLocalMeta(meta, storeNames)
+    getInitialLocalMeta(store.getMeta(), storeNames)
   );
   const staticStoreName = storeNames.join(",");
   useEffect(() => {
-    const newLocalState = { ...localMeta };
-    let isChanged = false;
+    const onChangeMeta = (meta: StateMeta) => {
+      const newLocalState = { ...localMeta };
+      let isChanged = false;
 
-    Object.keys(localMeta).forEach((key) => {
-      if (meta[key] !== newLocalState[key]) {
-        isChanged = true;
+      Object.keys(localMeta).forEach((key) => {
+        if (store.getMeta()[key] !== newLocalState[key]) {
+          isChanged = true;
 
-        newLocalState[key] = meta[key];
+          newLocalState[key] = meta[key];
+        }
+      });
+
+      if (isChanged) {
+        setLocalMeta(newLocalState);
       }
-    });
+    };
 
-    if (isChanged) {
-      setLocalMeta(newLocalState);
-    }
-  }, [meta, staticStoreName]);
+    store.subscribeMeta(onChangeMeta);
+
+    return () => {
+      store.unsubscribeMeta(onChangeMeta);
+    };
+  }, [staticStoreName]);
 
   return localMeta;
 }

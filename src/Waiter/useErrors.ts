@@ -1,8 +1,7 @@
-import { useContext } from "react";
-import { StoreContext } from "./context";
+import { useMeta } from "./useMeta";
 
 export function useError(...storeNames: string[]) {
-  const { meta } = useContext(StoreContext);
+  const meta = useMeta(storeNames);
   const index = storeNames.findIndex((storeName) => meta[storeName]?.error);
 
   return index > -1

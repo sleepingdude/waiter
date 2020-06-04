@@ -45,14 +45,14 @@ export function Main<R extends Requests = Requests>({
   const requestsKeys = Object.keys(requests);
   const requestsEntries = Object.entries(requests);
 
-  const { setData, call } = useContext(StoreContext);
+  const { store } = useContext(StoreContext);
 
   const meta = useMeta(requestsKeys) as ChildrenMeta<R>;
   const data = useData(requestsKeys) as ChildrenData<R>;
 
   const update = requestsEntries.reduce((acc, [storeName]) => {
     acc[storeName] = (data: any) => {
-      setData({ [storeName]: data });
+      store.setDataByKey(storeName, data);
     };
 
     return acc;
@@ -67,7 +67,7 @@ export function Main<R extends Requests = Requests>({
     .filter((v): v is Error => !!v);
 
   useEffect(() => {
-    call(requests);
+    store.call(requests).then(console.log);
   }, []);
 
   return (

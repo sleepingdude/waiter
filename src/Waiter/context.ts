@@ -1,11 +1,4 @@
 import { createContext } from "react";
-import { Methods, State } from "./types";
+import { Store } from "./store";
 
-export const initialState: State & Methods = {
-  data: {},
-  meta: {},
-  setData: () => {},
-  call: () => {}
-};
-
-export const StoreContext = createContext(initialState);
+export const StoreContext = createContext<{ store: Store }>({} as any);

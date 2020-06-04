@@ -11,25 +11,35 @@ const getInitialData = (data: StateData, storeNames: string[]) => {
 };
 
 export function useData(storeNames: string[]) {
-  const { data } = useContext(StoreContext);
-  const [localData, setLocalData] = useState(getInitialData(data, storeNames));
+  const { store } = useContext(StoreContext);
+  const [localData, setLocalData] = useState(
+    getInitialData(store.getData(), storeNames)
+  );
   const staticStoreName = storeNames.join(",");
   useEffect(() => {
-    const newLocalState = { ...localData };
-    let isChanged = false;
+    const onChangeData = (data: StateData) => {
+      const newLocalState = { ...localData };
+      let isChanged = false;
 
-    Object.keys(localData).forEach((key) => {
-      if (data[key] !== newLocalState[key]) {
-        isChanged = true;
+      Object.keys(localData).forEach((key) => {
+        if (data[key] !== newLocalState[key]) {
+          isChanged = true;
 
-        newLocalState[key] = data[key];
+          newLocalState[key] = data[key];
+        }
+      });
+
+      if (isChanged) {
+        setLocalData(newLocalState);
       }
-    });
+    };
 
-    if (isChanged) {
-      setLocalData(newLocalState);
-    }
-  }, [data, staticStoreName]);
+    store.subscribeData(onChangeData);
+
+    return () => {
+      store.unsubscribeData(onChangeData);
+    };
+  }, [staticStoreName]);
 
   return localData;
 }

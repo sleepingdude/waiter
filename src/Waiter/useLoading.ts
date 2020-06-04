@@ -1,8 +1,7 @@
-import { useContext } from "react";
-import { StoreContext } from "./context";
+import { useMeta } from "./useMeta";
 
 export function useLoading(...storeNames: string[]) {
-  const { meta, data } = useContext(StoreContext);
+  const meta = useMeta(storeNames);
 
   return storeNames.some((storeName) => meta[storeName]?.isFetching);
 }
