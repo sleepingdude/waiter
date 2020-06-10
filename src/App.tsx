@@ -3,6 +3,8 @@ import "./App.css";
 import { Waiter } from "./Waiter/Waiter";
 import { WaiterProvider } from "./Waiter/WaiterProvider";
 import { toRequest } from "./Waiter/toRequest";
+import { createStore } from "./Waiter/store";
+import { useCall } from "./Waiter/useCall";
 
 type User = {
   id: string;
@@ -42,9 +44,11 @@ const Errors = (...errors: Error[]) => (
   <div style={{ color: "red" }}>{errors.map((e) => e.toString())}</div>
 );
 
+const store = createStore();
+
 function App() {
   return (
-    <WaiterProvider>
+    <WaiterProvider store={store}>
       <div className="App">
         <Waiter
           requests={{
@@ -75,15 +79,29 @@ function App() {
                   renderLoader={Loader}
                   renderErrors={Errors}
                 >
-                  {({ data, update }) => {
+                  {({ data, update, call }) => {
                     console.log("render 2");
+
+                    const _call = useCall();
+
                     return (
                       <div
-                        onClick={() => {
-                          update.messages([...data.messages, ...data.messages]);
+                        onClick={async () => {
+                          // const result = await call({
+                          //   user: toRequest(fetchUser, "userId111")
+                          // });
+                          //
+                          const result = await _call({
+                            user: toRequest(fetchUser, "userId" + Math.random())
+                          });
+
+                          type rr = typeof result;
+                          console.log(result);
+
+                          // update.messages([...data.messages, ...data.messages]);
                         }}
                       >
-                        Click for update Messages:
+                        Click:
                         {JSON.stringify(data)}
                         <Waiter
                           requests={{

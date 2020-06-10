@@ -41,5 +41,7 @@ export function useData(storeNames: string[]) {
     };
   }, [staticStoreName]);
 
+  console.log(storeNames, localData);
+
   return localData;
 }

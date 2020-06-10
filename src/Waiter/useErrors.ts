@@ -1,10 +1,10 @@
 import { useMeta } from "./useMeta";
 
-export function useError(...storeNames: string[]) {
+export function useErrors(...storeNames: string[]) {
   const meta = useMeta(storeNames);
-  const index = storeNames.findIndex((storeName) => meta[storeName]?.error);
+  const errors = storeNames
+    .map((storeName) => meta[storeName]?.error)
+    .filter(Boolean);
 
-  return index > -1
-    ? meta[storeNames[index] as keyof typeof meta]?.error
-    : null;
+  return errors.length > 0 ? errors : null;
 }

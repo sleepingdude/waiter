@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { StoreContext } from "./context";
 import { useData } from "./useData";
 import { ChildrenData, ChildrenMeta, ChildrenUpdate, Requests } from "./types";
@@ -9,27 +9,27 @@ interface Props<R extends Requests> {
   requests: R;
   renderLoader: () => React.ReactNode;
   renderErrors: (...errors: Error[]) => React.ReactNode;
+  ignoreCache?: boolean;
   children(props: {
     data: ChildrenData<R>;
     meta: ChildrenMeta<R>;
     update: ChildrenUpdate<R>;
-    loading: boolean;
-    error: any;
+    call<T extends Requests>(requests: T): ChildrenData<T>;
   }): React.ReactNode;
 }
 
 const Content: React.FC<any> = ({
-  loading,
   renderLoader,
   renderErrors,
   errors,
   children,
   data,
+  isReady,
   ...props
 }) => {
-  return loading
+  return !isReady
     ? renderLoader()
-    : errors.length
+    : errors.length && !isReady
     ? renderErrors(...errors)
     : data
     ? children({ data, ...props })
@@ -58,13 +58,18 @@ export function Main<R extends Requests = Requests>({
     return acc;
   }, {} as any);
 
-  const loading = requestsEntries.some(
-    ([storeName]) => !meta[storeName] || meta[storeName]?.isFetching
+  const isReady = requestsEntries.every(
+    ([storeName]) => meta[storeName]?.isReady
   );
 
   const errors: Error[] = requestsEntries
     .map(([storeName]) => meta[storeName]?.error)
     .filter((v): v is Error => !!v);
+
+  const call = useMemo(
+    () => async (requests: Requests) => await store.call(requests, true),
+    []
+  );
 
   useEffect(() => {
     store.call(requests).then(console.log);
@@ -73,9 +78,10 @@ export function Main<R extends Requests = Requests>({
   return (
     <Content
       {...{
+        call,
         data,
+        isReady,
         meta,
-        loading,
         children,
         errors,
         update,

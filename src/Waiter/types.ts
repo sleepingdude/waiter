@@ -3,22 +3,14 @@ import { toRequest } from "./toRequest";
 export type StateData = { [storeName: string]: Readonly<any> };
 export type StateMetaItem = {
   isFetching: boolean;
+  isReady: boolean;
+  try: number;
   error: Error | null;
 };
 
 export type StateMeta = {
   [storeName: string]: StateMetaItem;
 };
-
-export interface State {
-  data: Readonly<StateData>;
-  meta: Readonly<StateMeta>;
-}
-
-export interface Methods {
-  setData(data: StateData): void;
-  call(requests: Requests): void;
-}
 
 export type FetchFunc = (...params: any) => Promise<any>;
 
