@@ -10,7 +10,7 @@ const getInitialData = (data: StateData, storeNames: string[]) => {
   }, {} as StateData);
 };
 
-export function useData(storeNames: string[]) {
+export function useData(...storeNames: string[]) {
   const { store } = useContext(StoreContext);
   const [localData, setLocalData] = useState(
     getInitialData(store.getData(), storeNames)
@@ -40,8 +40,6 @@ export function useData(storeNames: string[]) {
       store.unsubscribeData(onChangeData);
     };
   }, [staticStoreName]);
-
-  console.log(storeNames, localData);
 
   return localData;
 }

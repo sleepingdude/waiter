@@ -1,13 +1,13 @@
 import React, { ErrorInfo } from "react";
 
 type Props = {
-  renderError(errors: Error | null): React.ReactNode;
+  renderErrors(errors: Error[]): React.ReactNode;
 };
 
 type State =
   | {
       hasError: true;
-      error: Error;
+      errors: Error[];
     }
   | {
       hasError: false;
@@ -20,12 +20,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
+    return { hasError: true, errors: [error] };
   }
 
   render() {
     if (this.state.hasError) {
-      return this.props.renderError(this.state.error);
+      return this.props.renderErrors(this.state.errors);
     }
 
     return this.props.children;

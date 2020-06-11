@@ -8,7 +8,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 interface Props<R extends Requests> {
   requests: R;
   renderLoader: () => React.ReactNode;
-  renderErrors: (...errors: Error[]) => React.ReactNode;
+  renderErrors: (errors: Error[]) => React.ReactNode;
   ignoreCache?: boolean;
   children(props: {
     data: ChildrenData<R>;
@@ -27,28 +27,27 @@ const Content: React.FC<any> = ({
   isReady,
   ...props
 }) => {
-  return !isReady
-    ? renderLoader()
-    : errors.length && !isReady
-    ? renderErrors(...errors)
-    : data
-    ? children({ data, ...props })
-    : null;
+  if (isReady) {
+    return data ? children({ data, ...props }) : null;
+  } else {
+    return errors.length ? renderErrors(errors) : renderLoader();
+  }
 };
 
 export function Main<R extends Requests = Requests>({
   requests,
   children,
   renderErrors,
-  renderLoader
+  renderLoader,
+  ignoreCache
 }: Props<R>): React.FunctionComponentElement<Props<R>> {
   const requestsKeys = Object.keys(requests);
   const requestsEntries = Object.entries(requests);
 
   const { store } = useContext(StoreContext);
 
-  const meta = useMeta(requestsKeys) as ChildrenMeta<R>;
-  const data = useData(requestsKeys) as ChildrenData<R>;
+  const meta = useMeta(...requestsKeys) as ChildrenMeta<R>;
+  const data = useData(...requestsKeys) as ChildrenData<R>;
 
   const update = requestsEntries.reduce((acc, [storeName]) => {
     acc[storeName] = (data: any) => {
@@ -96,7 +95,7 @@ export function Waiter<R extends Requests = Requests>(
   props: Props<R>
 ): React.FunctionComponentElement<Props<R>> {
   return (
-    <ErrorBoundary renderError={props.renderErrors}>
+    <ErrorBoundary renderErrors={props.renderErrors}>
       <Main {...props} />
     </ErrorBoundary>
   );

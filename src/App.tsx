@@ -38,9 +38,15 @@ const fetchMessages = async (id: number): Promise<Message[]> => {
     setTimeout(() => resolve([{ id, message: "Message" }]), 2000)
   );
 };
+//
+// const fetchMessages = async (id: number): Promise<Message[]> => {
+//   return await new Promise((resolve, reject) =>
+//     setTimeout(() => reject(new Error("Some error")), 2000)
+//   );
+// };
 
 const Loader = () => <div style={{ color: "gold" }}>Loading</div>;
-const Errors = (...errors: Error[]) => (
+const Errors = (errors: Error[]) => (
   <div style={{ color: "red" }}>{errors.map((e) => e.toString())}</div>
 );
 
