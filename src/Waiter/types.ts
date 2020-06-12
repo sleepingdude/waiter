@@ -1,4 +1,5 @@
 import { toRequest } from "./toRequest";
+import { Store } from "./store";
 
 export type StateData = { [storeName: string]: Readonly<any> };
 export type StateMetaItem = {
@@ -14,24 +15,38 @@ export type StateMeta = {
 
 export type FetchFunc = (...params: any) => Promise<any>;
 
-export type Requests = { [key: string]: ReturnType<typeof toRequest> };
-
-export type ChildrenData<T> = {
-  [K in keyof T]: T[K] extends { request: infer U }
-    ? U extends (...args: any) => Promise<infer G>
-      ? G
-      : never
-    : unknown;
+export type Requests = {
+  [key: string]: ReturnType<typeof toRequest> | FetchFunc;
 };
 
-export type ChildrenMeta<T> = {
+export type Mutations = {
+  [key: string]: FetchFunc;
+};
+
+export type ChildData<T> = {
+  [K in keyof T]: T[K] extends infer U
+    ? U extends { request: (...args: any) => Promise<infer G> }
+      ? G
+      : U extends (...params: any) => Promise<infer Y>
+      ? Y
+      : never
+    : never;
+};
+
+export type ChildMeta<T> = {
   [K in keyof T]: StateMetaItem;
 };
 
-export type ChildrenUpdate<T> = {
-  [K in keyof T]: T[K] extends { request: infer U }
-    ? U extends (...args: any) => Promise<infer G>
+export type ChildUpdate<T> = {
+  [K in keyof T]: T[K] extends infer U
+    ? U extends { request: (...args: any) => Promise<infer G> }
       ? (data: G) => void
+      : U extends (store: Store) => Promise<infer Y>
+      ? (data: Y) => void
       : never
-    : unknown;
+    : never;
+};
+
+export type ChildMutations<T> = {
+  [K in keyof T]: T[K];
 };

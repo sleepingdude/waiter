@@ -3,7 +3,7 @@ import "./App.css";
 import { Waiter } from "./Waiter/Waiter";
 import { WaiterProvider } from "./Waiter/WaiterProvider";
 import { toRequest } from "./Waiter/toRequest";
-import { createStore } from "./Waiter/store";
+import { createStore, Store } from "./Waiter/store";
 import { useCall } from "./Waiter/useCall";
 
 type User = {
@@ -14,6 +14,12 @@ type User = {
 const fetchUser = async (id: string): Promise<User> => {
   return await new Promise((resolve) =>
     setTimeout(() => resolve({ id, name: "UserName" }), 2000)
+  );
+};
+
+const updateUser = async (id: string): Promise<User> => {
+  return await new Promise((resolve) =>
+    setTimeout(() => resolve({ id, name: "UserName" + Math.random() }), 2000)
   );
 };
 
@@ -50,6 +56,14 @@ const Errors = (errors: Error[]) => (
   <div style={{ color: "red" }}>{errors.map((e) => e.toString())}</div>
 );
 
+const myAction = async (store: Store) => {
+  console.log(store);
+
+  return (await new Promise((resolve) =>
+    setTimeout(() => resolve({ success: "Message" }), 2000)
+  )) as { success: string };
+};
+
 const store = createStore();
 
 function App() {
@@ -59,13 +73,17 @@ function App() {
         <Waiter
           requests={{
             user: toRequest(fetchUser, "userId"),
-            posts: toRequest(fetchPost, 111)
+            posts: toRequest(fetchPost, 111),
+            someAction: myAction
+          }}
+          mutations={{
+            user: updateUser,
+            someOtherMutation: myAction
           }}
           renderLoader={Loader}
           renderErrors={Errors}
         >
-          {({ data, meta }) => {
-            console.log("render 1");
+          {({ data, meta, update, mutations }) => {
             return (
               <div>
                 <h4>Data:</h4>
@@ -78,14 +96,22 @@ function App() {
                 {JSON.stringify(meta.user)}
                 Post:
                 {JSON.stringify(meta.posts)}
+                Some Action:
+                {JSON.stringify(meta.someAction)}
+                Some Mutation:
+                {JSON.stringify(meta.someOtherMutation)}
                 <Waiter
                   requests={{
                     messages: toRequest(fetchMessages, 1111)
                   }}
+                  mutations={{
+                    user: updateUser,
+                    someOtherMutation: myAction
+                  }}
                   renderLoader={Loader}
                   renderErrors={Errors}
                 >
-                  {({ data, update, call }) => {
+                  {({ data, update, call, mutations }) => {
                     console.log("render 2");
 
                     const _call = useCall();
@@ -97,12 +123,16 @@ function App() {
                           //   user: toRequest(fetchUser, "userId111")
                           // });
                           //
-                          const result = await _call({
-                            user: toRequest(fetchUser, "userId" + Math.random())
-                          });
+                          // const result = await _call({
+                          //   user: toRequest(fetchUser, "userId" + Math.random())
+                          // });
 
-                          type rr = typeof result;
-                          console.log(result);
+                          // type rr = typeof result;
+                          // console.log(result);
+
+                          const mm = await mutations.user("111" + new Date());
+
+                          console.log(mm);
 
                           // update.messages([...data.messages, ...data.messages]);
                         }}

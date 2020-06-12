@@ -1,5 +1,5 @@
 import {
-  ChildrenData,
+  ChildData,
   Requests,
   StateData,
   StateMeta,
@@ -29,7 +29,7 @@ export type Store<D extends StateData = StateData> = {
   call<T extends Requests>(
     requests: T,
     ignoreCache?: boolean
-  ): Promise<ChildrenData<T>>;
+  ): Promise<ChildData<T>>;
 };
 
 export function createStore(): Store {
@@ -80,7 +80,7 @@ export function createStore(): Store {
       const requestsEntries = Object.entries(requests);
 
       const results = await Promise.all(
-        requestsEntries.map(async ([storeName, { request, args }]) => {
+        requestsEntries.map(async ([storeName, requestItem]) => {
           try {
             const preRequestMeta = this.getMetaByKey(storeName) || {
               error: null,
@@ -107,7 +107,10 @@ export function createStore(): Store {
               isFetching: true
             });
 
-            const result = await request(...args);
+            const result =
+              typeof requestItem === "function"
+                ? await requestItem(this)
+                : await requestItem.request(...requestItem.args);
 
             this.setDataByKey(storeName, result);
 
