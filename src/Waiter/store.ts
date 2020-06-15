@@ -107,10 +107,7 @@ export function createStore(): Store {
               isFetching: true
             });
 
-            const result =
-              typeof requestItem === "function"
-                ? await requestItem(this)
-                : await requestItem.request(...requestItem.args);
+            const result = await requestItem(this);
 
             this.setDataByKey(storeName, result);
 

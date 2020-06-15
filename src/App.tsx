@@ -2,7 +2,6 @@ import React from "react";
 import "./App.css";
 import { Waiter } from "./Waiter/Waiter";
 import { WaiterProvider } from "./Waiter/WaiterProvider";
-import { toRequest } from "./Waiter/toRequest";
 import { createStore, Store } from "./Waiter/store";
 import { useCall } from "./Waiter/useCall";
 
@@ -72,8 +71,8 @@ function App() {
       <div className="App">
         <Waiter
           requests={{
-            user: toRequest(fetchUser, "userId"),
-            posts: toRequest(fetchPost, 111),
+            user: () => fetchUser("userId"),
+            posts: () => fetchPost(111),
             someAction: myAction
           }}
           mutations={{
@@ -102,7 +101,7 @@ function App() {
                 {JSON.stringify(meta.someOtherMutation)}
                 <Waiter
                   requests={{
-                    messages: toRequest(fetchMessages, 1111)
+                    messages: () => fetchMessages(1111)
                   }}
                   mutations={{
                     user: updateUser,
@@ -141,7 +140,7 @@ function App() {
                         {JSON.stringify(data)}
                         <Waiter
                           requests={{
-                            posts: toRequest(fetchPost, 111)
+                            posts: () => fetchPost(111)
                           }}
                           renderLoader={Loader}
                           renderErrors={Errors}
@@ -157,7 +156,7 @@ function App() {
                                 <div style={{ display: "flex" }}>
                                   <Waiter
                                     requests={{
-                                      user: toRequest(fetchUser, "111")
+                                      user: () => fetchUser("111")
                                     }}
                                     renderLoader={Loader}
                                     renderErrors={Errors}
@@ -177,7 +176,7 @@ function App() {
                                   </Waiter>
                                   <Waiter
                                     requests={{
-                                      messages: toRequest(fetchMessages, 11)
+                                      messages: () => fetchMessages(11)
                                     }}
                                     renderLoader={Loader}
                                     renderErrors={Errors}

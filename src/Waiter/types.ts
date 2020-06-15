@@ -1,4 +1,3 @@
-import { toRequest } from "./toRequest";
 import { Store } from "./store";
 
 export type StateData = { [storeName: string]: Readonly<any> };
@@ -16,7 +15,7 @@ export type StateMeta = {
 export type FetchFunc = (...params: any) => Promise<any>;
 
 export type Requests = {
-  [key: string]: ReturnType<typeof toRequest> | FetchFunc;
+  [key: string]: FetchFunc;
 };
 
 export type Mutations = {
