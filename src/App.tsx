@@ -38,17 +38,17 @@ type Message = {
   message: string;
 };
 
-const fetchMessages = async (id: number): Promise<Message[]> => {
-  return await new Promise((resolve) =>
-    setTimeout(() => resolve([{ id, message: "Message" }]), 2000)
-  );
-};
-//
 // const fetchMessages = async (id: number): Promise<Message[]> => {
-//   return await new Promise((resolve, reject) =>
-//     setTimeout(() => reject(new Error("Some error")), 2000)
+//   return await new Promise((resolve) =>
+//     setTimeout(() => resolve([{ id, message: "Message" }]), 2000)
 //   );
 // };
+
+const fetchMessages = async (id: number): Promise<Message[]> => {
+  return await new Promise((resolve, reject) =>
+    setTimeout(() => reject(new Error("Fetch error")), 2000)
+  );
+};
 
 const Loader = () => <div style={{ color: "gold" }}>Loading</div>;
 const Errors = (errors: Error[]) => (
@@ -62,6 +62,8 @@ const myAction = async (store: Store) => {
     setTimeout(() => resolve({ success: "Message" }), 2000)
   )) as { success: string };
 };
+
+const userNameSelector = (user: User) => user.name;
 
 const store = createStore();
 
@@ -83,11 +85,13 @@ function App() {
           renderErrors={Errors}
         >
           {({ data, meta, update, mutations }) => {
+            const userName = userNameSelector(data.user);
+
             return (
               <div>
                 <h4>Data:</h4>
                 User:
-                {JSON.stringify(data.user)}
+                {JSON.stringify(userName)}
                 Post:
                 {JSON.stringify(data.posts)}
                 <h4>Meta:</h4>
