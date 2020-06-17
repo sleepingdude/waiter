@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { Waiter } from "./Waiter/Waiter";
 import { WaiterProvider } from "./Waiter/WaiterProvider";
@@ -38,17 +38,17 @@ type Message = {
   message: string;
 };
 
-// const fetchMessages = async (id: number): Promise<Message[]> => {
-//   return await new Promise((resolve) =>
-//     setTimeout(() => resolve([{ id, message: "Message" }]), 2000)
-//   );
-// };
-
 const fetchMessages = async (id: number): Promise<Message[]> => {
-  return await new Promise((resolve, reject) =>
-    setTimeout(() => reject(new Error("Fetch error")), 2000)
+  return await new Promise((resolve) =>
+    setTimeout(() => resolve([{ id, message: "Message" }]), 2000)
   );
 };
+
+// const fetchMessages = async (id: number): Promise<Message[]> => {
+//   return await new Promise((resolve, reject) =>
+//     setTimeout(() => reject(new Error("Fetch error")), 2000)
+//   );
+// };
 
 const Loader = () => <div style={{ color: "gold" }}>Loading</div>;
 const Errors = (errors: Error[]) => (
@@ -66,6 +66,8 @@ const myAction = async (store: Store) => {
 const userNameSelector = (user: User) => user.name;
 
 const store = createStore();
+
+store.subscribeData(console.info);
 
 function App() {
   return (
@@ -92,17 +94,22 @@ function App() {
                 <h4>Data:</h4>
                 User:
                 {JSON.stringify(userName)}
+                <br />
                 Post:
                 {JSON.stringify(data.posts)}
                 <h4>Meta:</h4>
                 User:
                 {JSON.stringify(meta.user)}
+                <br />
                 Post:
                 {JSON.stringify(meta.posts)}
+                <br />
                 Some Action:
                 {JSON.stringify(meta.someAction)}
+                <br />
                 Some Mutation:
                 {JSON.stringify(meta.someOtherMutation)}
+                <br />
                 <Waiter
                   requests={{
                     messages: () => fetchMessages(1111)
@@ -115,8 +122,6 @@ function App() {
                   renderErrors={Errors}
                 >
                   {({ data, update, call, mutations }) => {
-                    console.log("render 2");
-
                     const _call = useCall();
 
                     return (
@@ -140,8 +145,11 @@ function App() {
                           // update.messages([...data.messages, ...data.messages]);
                         }}
                       >
-                        Click:
-                        {JSON.stringify(data)}
+                        Click for update User
+                        <br />
+                        Messages:
+                        <br />
+                        {JSON.stringify(data.messages)}
                         <Waiter
                           requests={{
                             posts: () => fetchPost(111)
@@ -150,7 +158,6 @@ function App() {
                           renderErrors={Errors}
                         >
                           {({ data }) => {
-                            console.log("render 3");
                             return (
                               <div>
                                 <div>
@@ -180,7 +187,7 @@ function App() {
                                   </Waiter>
                                   <Waiter
                                     requests={{
-                                      messages: () => fetchMessages(11)
+                                      user: () => fetchUser("111")
                                     }}
                                     renderLoader={Loader}
                                     renderErrors={Errors}
@@ -188,7 +195,7 @@ function App() {
                                     {({ data }) => {
                                       return (
                                         <div style={{ width: "50%" }}>
-                                          Cashed messages
+                                          Cashed user
                                           {JSON.stringify(data)}
                                         </div>
                                       );
