@@ -73,7 +73,7 @@ export function Main<
   const mutations = mutationsEntries.reduce((acc, [storeName, func]) => {
     acc[storeName] = async (...args: any[]) => {
       const result = await store.call(
-        { [storeName]: () => func(...args) },
+        { [storeName]: func(...args).bind(null, store) },
         true
       );
 

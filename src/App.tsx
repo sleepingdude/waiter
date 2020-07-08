@@ -16,7 +16,7 @@ const fetchUser = async (id: string): Promise<User> => {
   );
 };
 
-const updateUser = async (id: string): Promise<User> => {
+const updateUser = (id: string) => async (store: Store): Promise<User> => {
   return await new Promise((resolve) =>
     setTimeout(() => resolve({ id, name: "UserName" + Math.random() }), 2000)
   );
@@ -55,6 +55,14 @@ const Errors = (errors: Error[]) => (
   <div style={{ color: "red" }}>{errors.map((e) => e.toString())}</div>
 );
 
+const myMutation = (params: string) => async (store: Store) => {
+  console.log(store);
+
+  return (await new Promise((resolve) =>
+    setTimeout(() => resolve({ success: "Message" }), 2000)
+  )) as { success: string };
+};
+
 const myAction = async (store: Store) => {
   console.log(store);
 
@@ -80,8 +88,8 @@ function App() {
             someAction: myAction
           }}
           mutations={{
-            user: updateUser,
-            someOtherMutation: myAction
+            updateUserMutation: updateUser,
+            someOtherMutation: myMutation
           }}
           renderLoader={Loader}
           renderErrors={Errors}
@@ -110,13 +118,20 @@ function App() {
                 Some Mutation:
                 {JSON.stringify(meta.someOtherMutation)}
                 <br />
+                <button
+                  onClick={async () => {
+                    const result = await mutations.someOtherMutation();
+                  }}
+                >
+                  mutation
+                </button>
                 <Waiter
                   requests={{
                     messages: () => fetchMessages(1111)
                   }}
                   mutations={{
                     user: updateUser,
-                    someOtherMutation: myAction
+                    someOtherMutation: myMutation
                   }}
                   renderLoader={Loader}
                   renderErrors={Errors}

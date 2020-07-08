@@ -12,14 +12,15 @@ export type StateMeta = {
   [storeName: string]: StateMetaItem;
 };
 
-export type FetchFunc = (...params: any) => Promise<any>;
+export type RequestFunc = (store: Store) => Promise<any>;
+export type MutationFunc = (...params: any) => (store: Store) => Promise<any>;
 
 export type Requests = {
-  [key: string]: FetchFunc;
+  [key: string]: RequestFunc;
 };
 
 export type Mutations = {
-  [key: string]: FetchFunc;
+  [key: string]: MutationFunc;
 };
 
 export type ChildData<T> = {
@@ -28,6 +29,8 @@ export type ChildData<T> = {
       ? G
       : U extends (...params: any) => Promise<infer Y>
       ? Y
+      : U extends (...params: any) => (...params: any) => Promise<infer D>
+      ? D
       : never
     : never;
 };
@@ -47,5 +50,9 @@ export type ChildUpdate<T> = {
 };
 
 export type ChildMutations<T> = {
-  [K in keyof T]: T[K];
+  [K in keyof T]: T[K] extends infer U
+    ? U extends (...args: any) => (...args: any) => Promise<infer G>
+      ? (...args: Parameters<U>) => Promise<G>
+      : never
+    : never;
 };
