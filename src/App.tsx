@@ -120,7 +120,7 @@ function App() {
                 <br />
                 <button
                   onClick={async () => {
-                    const result = await mutations.someOtherMutation();
+                    const result = await mutations.someOtherMutation("dsdfg");
                   }}
                 >
                   mutation
