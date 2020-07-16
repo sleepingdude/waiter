@@ -28,7 +28,8 @@ export type Store<D extends StateData = StateData> = {
   unsubscribeMeta(listener: MetaListener<StateMeta>): void;
   call<T extends Requests>(
     requests: T,
-    ignoreCache?: boolean
+    ignoreCache?: boolean,
+    callerKey?: string
   ): Promise<ChildData<T>>;
 };
 
@@ -76,7 +77,7 @@ export function createStore(): Store {
     unsubscribeMeta(callback) {
       this.metaListeners.delete(callback);
     },
-    async call(requests, ignoreCache = false) {
+    async call(requests, ignoreCache = false, callerKey = "*") {
       const requestsEntries = Object.entries(requests);
 
       const results = await Promise.all(
@@ -86,7 +87,8 @@ export function createStore(): Store {
               error: null,
               try: 0,
               isFetching: false,
-              isReady: false
+              isReady: false,
+              callerKey
             };
 
             if (!ignoreCache) {

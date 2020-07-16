@@ -18,7 +18,11 @@ const fetchUser = async (id: string): Promise<User> => {
 
 const updateUser = (id: string) => async (store: Store): Promise<User> => {
   return await new Promise((resolve) =>
-    setTimeout(() => resolve({ id, name: "UserName" + Math.random() }), 2000)
+    setTimeout(() => {
+      const newUser = { id, name: "UserName" + Math.random() };
+      store.setDataByKey("user", newUser);
+      resolve(newUser);
+    }, 2000)
   );
 };
 
@@ -44,11 +48,11 @@ const fetchMessages = async (id: number): Promise<Message[]> => {
   );
 };
 
-// const fetchMessages = async (id: number): Promise<Message[]> => {
-//   return await new Promise((resolve, reject) =>
-//     setTimeout(() => reject(new Error("Fetch error")), 2000)
-//   );
-// };
+const fetchWithError = async (id: number): Promise<Message[]> => {
+  return await new Promise((resolve, reject) =>
+    setTimeout(() => reject(new Error("Fetch error")), 2000)
+  );
+};
 
 const Loader = () => <div style={{ color: "gold" }}>Loading</div>;
 const Errors = (errors: Error[]) => (
@@ -78,157 +82,167 @@ const store = createStore();
 store.subscribeData(console.info);
 
 function App() {
+  const [active, setActive] = useState("basic");
+
   return (
     <WaiterProvider store={store}>
+      <ul>
+        <li onClick={() => setActive("basic")}>Basic</li>
+        <li onClick={() => setActive("cache")}>Cache</li>
+        <li onClick={() => setActive("error")}>Error</li>
+        <li onClick={() => setActive("mutations")}>Mutations</li>
+      </ul>
       <div className="App">
-        <Waiter
-          requests={{
-            user: () => fetchUser("userId"),
-            posts: () => fetchPost(111),
-            someAction: myAction
-          }}
-          mutations={{
-            updateUserMutation: updateUser,
-            someOtherMutation: myMutation
-          }}
-          renderLoader={Loader}
-          renderErrors={Errors}
-        >
-          {({ data, meta, update, mutations }) => {
-            const userName = userNameSelector(data.user);
+        <h1>{active}</h1>
+        {active === "basic" && (
+          <Waiter
+            requests={{
+              user: () => fetchUser("userId")
+            }}
+            renderLoader={Loader}
+            renderErrors={Errors}
+          >
+            {({ data, meta, update, mutations }) => {
+              return (
+                <div>
+                  <h4>Data:</h4>
+                  User:
+                  {JSON.stringify(data.user)}
+                  <h4>Meta:</h4>
+                  User:
+                  {JSON.stringify(meta.user)}
+                </div>
+              );
+            }}
+          </Waiter>
+        )}
+        {active === "cache" && (
+          <Waiter
+            requests={{
+              user: () => fetchUser("userId"),
+              posts: () => fetchPost(111)
+            }}
+            renderLoader={Loader}
+            renderErrors={Errors}
+          >
+            {({ data, meta, update, mutations }) => {
+              const userName = userNameSelector(data.user);
 
-            return (
-              <div>
-                <h4>Data:</h4>
-                User:
-                {JSON.stringify(userName)}
-                <br />
-                Post:
-                {JSON.stringify(data.posts)}
-                <h4>Meta:</h4>
-                User:
-                {JSON.stringify(meta.user)}
-                <br />
-                Post:
-                {JSON.stringify(meta.posts)}
-                <br />
-                Some Action:
-                {JSON.stringify(meta.someAction)}
-                <br />
-                Some Mutation:
-                {JSON.stringify(meta.someOtherMutation)}
-                <br />
-                <button
-                  onClick={async () => {
-                    const result = await mutations.someOtherMutation("dsdfg");
-                  }}
-                >
-                  mutation
-                </button>
-                <Waiter
-                  requests={{
-                    messages: () => fetchMessages(1111)
-                  }}
-                  mutations={{
-                    user: updateUser,
-                    someOtherMutation: myMutation
-                  }}
-                  renderLoader={Loader}
-                  renderErrors={Errors}
-                >
-                  {({ data, update, call, mutations }) => {
-                    const _call = useCall();
+              return (
+                <div>
+                  <h4>Data:</h4>
+                  User:
+                  {JSON.stringify(userName)}
+                  <br />
+                  Post:
+                  {JSON.stringify(data.posts)}
+                  <h4>Meta:</h4>
+                  User:
+                  {JSON.stringify(meta.user)}
+                  <br />
+                  Post:
+                  {JSON.stringify(meta.posts)}
+                  <br />
+                </div>
+              );
+            }}
+          </Waiter>
+        )}
 
-                    return (
-                      <div
-                        onClick={async () => {
-                          // const result = await call({
-                          //   user: toRequest(fetchUser, "userId111")
-                          // });
-                          //
-                          // const result = await _call({
-                          //   user: toRequest(fetchUser, "userId" + Math.random())
-                          // });
+        {active === "error" && (
+          <Waiter
+            requests={{
+              errorRequest: () => fetchWithError(111)
+            }}
+            renderLoader={Loader}
+            renderErrors={Errors}
+          >
+            {({ data, meta, update, mutations }) => {
+              return (
+                <div>
+                  <h4>Data:</h4>
+                  {JSON.stringify(data.errorRequest)}
+                  <h4>Meta:</h4>
+                  {JSON.stringify(meta.errorRequest)}
+                  <br />
+                  <Waiter
+                    requests={{
+                      myAction
+                    }}
+                    renderLoader={Loader}
+                    renderErrors={Errors}
+                  >
+                    {({ data }) => {
+                      console.log(data.myAction);
 
-                          // type rr = typeof result;
-                          // console.log(result);
+                      return (
+                        <div style={{ width: "50%" }}>
+                          {(() => {
+                            throw new Error("error");
+                            return null;
+                          })()}
+                          Cashed User
+                          {JSON.stringify(data)}
+                        </div>
+                      );
+                    }}
+                  </Waiter>
+                </div>
+              );
+            }}
+          </Waiter>
+        )}
 
-                          const mm = await mutations.user("111" + new Date());
+        {active === "mutations" && (
+          <Waiter
+            requests={{
+              messages: () => fetchMessages(1111),
+              user: () => fetchUser("userId")
+            }}
+            mutations={{
+              updateUser: updateUser,
+              someOtherMutation: myMutation
+            }}
+            renderLoader={Loader}
+            renderErrors={Errors}
+          >
+            {({ data, meta, update, call, mutations }) => {
+              return (
+                <div>
+                  <br />
+                  Messages:
+                  <br />
+                  {JSON.stringify(data.messages)}
+                  <br />
+                  User data:
+                  <br />
+                  {JSON.stringify(data.user)}
+                  User meta: <br />
+                  {JSON.stringify(meta.user)}
+                  <br />
+                  updateUser data:
+                  <br />
+                  {JSON.stringify(data.updateUser)}
+                  <br />
+                  updateUser meta: <br />
+                  {JSON.stringify(meta.updateUser)}
+                  <br />
+                  <button
+                    onClick={async () => {
+                      const mm = await mutations.updateUser("111" + new Date());
 
-                          console.log(mm);
+                      console.log(mm);
 
-                          // update.messages([...data.messages, ...data.messages]);
-                        }}
-                      >
-                        Click for update User
-                        <br />
-                        Messages:
-                        <br />
-                        {JSON.stringify(data.messages)}
-                        <Waiter
-                          requests={{
-                            posts: () => fetchPost(111)
-                          }}
-                          renderLoader={Loader}
-                          renderErrors={Errors}
-                        >
-                          {({ data }) => {
-                            return (
-                              <div>
-                                <div>
-                                  Cashed Posts
-                                  {JSON.stringify(data)}
-                                </div>
-                                <div style={{ display: "flex" }}>
-                                  <Waiter
-                                    requests={{
-                                      user: () => fetchUser("111")
-                                    }}
-                                    renderLoader={Loader}
-                                    renderErrors={Errors}
-                                  >
-                                    {({ data }) => {
-                                      return (
-                                        <div style={{ width: "50%" }}>
-                                          {(() => {
-                                            throw new Error("error");
-                                            return null;
-                                          })()}
-                                          Cashed User
-                                          {JSON.stringify(data)}
-                                        </div>
-                                      );
-                                    }}
-                                  </Waiter>
-                                  <Waiter
-                                    requests={{
-                                      user: () => fetchUser("111")
-                                    }}
-                                    renderLoader={Loader}
-                                    renderErrors={Errors}
-                                  >
-                                    {({ data }) => {
-                                      return (
-                                        <div style={{ width: "50%" }}>
-                                          Cashed user
-                                          {JSON.stringify(data)}
-                                        </div>
-                                      );
-                                    }}
-                                  </Waiter>
-                                </div>
-                              </div>
-                            );
-                          }}
-                        </Waiter>
-                      </div>
-                    );
-                  }}
-                </Waiter>
-              </div>
-            );
-          }}
-        </Waiter>
+                      // update.messages([...data.messages, ...data.messages]);
+                    }}
+                  >
+                    Click for update
+                  </button>
+                </div>
+              );
+            }}
+          </Waiter>
+        )}
       </div>
     </WaiterProvider>
   );

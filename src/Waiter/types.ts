@@ -6,6 +6,7 @@ export type StateMetaItem = {
   isReady: boolean;
   try: number;
   error: Error | null;
+  callerKey: string;
 };
 
 export type StateMeta = {

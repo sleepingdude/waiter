@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { StoreContext } from "./context";
 import { useData } from "./useData";
 import {
@@ -7,7 +7,9 @@ import {
   ChildMutations,
   ChildUpdate,
   Mutations,
-  Requests
+  Requests,
+  StateData,
+  StateMeta
 } from "./types";
 import { useMeta } from "./useMeta";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -55,12 +57,17 @@ export function Main<
 }: Props<R, M>): React.FunctionComponentElement<Props<R, M>> {
   const requestsKeys = Object.keys(props.requests);
   const requestsEntries = Object.entries(props.requests);
+  const mutationsKeys = Object.keys(props.mutations || {});
   const mutationsEntries = Object.entries(props.mutations || {});
 
   const { store } = useContext(StoreContext);
 
-  const meta = useMeta(...requestsKeys) as ChildMeta<R & M>;
-  const data = useData(...requestsKeys) as ChildData<R & M>;
+  const meta = useMeta(...requestsKeys, ...mutationsKeys) as ChildMeta<R & M>;
+  const data = useData(...requestsKeys, ...mutationsKeys) as ChildData<R & M>;
+
+  const callerRef = useRef(
+    `${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
+  );
 
   const update = requestsEntries.reduce((acc, [storeName]) => {
     acc[storeName] = (data: any) => {
@@ -74,7 +81,8 @@ export function Main<
     acc[storeName] = async (...args: any[]) => {
       const result = await store.call(
         { [storeName]: func(...args).bind(null, store) },
-        true
+        true,
+        callerRef.current
       );
 
       return result[storeName];
@@ -98,6 +106,32 @@ export function Main<
 
   useEffect(() => {
     store.call(props.requests);
+
+    return () => {
+      const oldMeta = store.getMeta();
+
+      const newMeta = Object.keys(oldMeta).reduce<StateMeta>((acc, key) => {
+        if (oldMeta[key].callerKey !== callerRef.current) {
+          acc[key] = oldMeta[key];
+        }
+
+        return acc;
+      }, {});
+
+      store.setMeta(newMeta);
+
+      const oldData = store.getData();
+
+      const newData = Object.keys(oldData).reduce<StateData>((acc, key) => {
+        if (oldMeta[key].callerKey !== callerRef.current) {
+          acc[key] = oldData[key];
+        }
+
+        return acc;
+      }, {});
+
+      store.setData(newData);
+    };
   }, []);
 
   return (
