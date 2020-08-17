@@ -1,4 +1,12 @@
 import { Store } from "./store";
+import {
+  query,
+  getList,
+  getObject,
+  Action,
+  deleteObject,
+  updateObject
+} from "./methods";
 
 export type StateData = { [storeName: string]: Readonly<any> };
 export type StateMetaItem = {
@@ -7,6 +15,13 @@ export type StateMetaItem = {
   try: number;
   error: Error | null;
   callerKey: string;
+  queryName: string;
+  listName: string;
+  itemName: string;
+  key: string;
+  keyPath: string;
+  type: Action;
+  fromCache: boolean;
 };
 
 export type StateMeta = {
@@ -17,22 +32,21 @@ export type RequestFunc = (store: Store) => Promise<any>;
 export type MutationFunc = (...params: any) => (store: Store) => Promise<any>;
 
 export type Requests = {
-  [key: string]: RequestFunc;
+  [key: string]:
+    | ReturnType<typeof query>
+    | ReturnType<typeof getList>
+    | ReturnType<typeof getObject>;
 };
 
 export type Mutations = {
-  [key: string]: MutationFunc;
+  [key: string]: (
+    ...args: any[]
+  ) => ReturnType<typeof deleteObject> | ReturnType<typeof updateObject>;
 };
 
-export type ChildData<T> = {
-  [K in keyof T]: T[K] extends infer U
-    ? U extends { request: (...args: any) => Promise<infer G> }
-      ? G
-      : U extends (...params: any) => Promise<infer Y>
-      ? Y
-      : U extends (...params: any) => (...params: any) => Promise<infer D>
-      ? D
-      : never
+export type ChildQueries<T> = {
+  [K in keyof T]: T[K] extends { fetch: (...args: any) => Promise<infer G> }
+    ? { data: G; meta: StateMetaItem }
     : never;
 };
 
@@ -51,9 +65,11 @@ export type ChildUpdate<T> = {
 };
 
 export type ChildMutations<T> = {
-  [K in keyof T]: T[K] extends infer U
-    ? U extends (...args: any) => (...args: any) => Promise<infer G>
-      ? (...args: Parameters<U>) => Promise<G>
-      : never
+  [K in keyof T]: T[K] extends (
+    ...args: infer A
+  ) => {
+    fetch: (...args: any) => Promise<infer G>;
+  }
+    ? { data: G; meta: StateMetaItem; call: (...args: A) => Promise<G> }
     : never;
 };

@@ -1,11 +1,9 @@
 import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { StoreContext } from "./context";
-import { useData } from "./useData";
 import {
-  ChildData,
   ChildMeta,
   ChildMutations,
-  ChildUpdate,
+  ChildQueries,
   Mutations,
   Requests,
   StateData,
@@ -15,17 +13,14 @@ import { useMeta } from "./useMeta";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 interface Props<R extends Requests, M extends Mutations> {
-  requests: R;
+  queries: R;
   mutations?: M;
   renderLoader: () => React.ReactNode;
   renderErrors: (errors: Error[]) => React.ReactNode;
   ignoreCache?: boolean;
   children(props: {
-    data: ChildData<R & M>;
-    meta: ChildMeta<R & M>;
-    update: ChildUpdate<R & M>;
+    queries: ChildQueries<R>;
     mutations: ChildMutations<M>;
-    call<T extends Requests>(requests: T): ChildData<T>;
   }): React.ReactNode;
 }
 
@@ -34,12 +29,12 @@ const Content: React.FC<any> = ({
   renderErrors,
   errors,
   children,
-  data,
+  queries,
   isReady,
   ...props
 }) => {
   if (isReady) {
-    return data ? children({ data, ...props }) : null;
+    return queries ? children({ queries, ...props }) : null;
   } else {
     return errors.length ? renderErrors(errors) : renderLoader();
   }
@@ -55,57 +50,77 @@ export function Main<
   ignoreCache,
   ...props
 }: Props<R, M>): React.FunctionComponentElement<Props<R, M>> {
-  const requestsKeys = Object.keys(props.requests);
-  const requestsEntries = Object.entries(props.requests);
+  const queriesKeys = Object.keys(props.queries);
+  const queriesEntries = Object.entries(props.queries);
   const mutationsKeys = Object.keys(props.mutations || {});
   const mutationsEntries = Object.entries(props.mutations || {});
 
   const { store } = useContext(StoreContext);
 
-  const meta = useMeta(...requestsKeys, ...mutationsKeys) as ChildMeta<R & M>;
-  const data = useData(...requestsKeys, ...mutationsKeys) as ChildData<R & M>;
+  const queriesMeta = useMeta(...queriesKeys) as ChildMeta<R>;
+  const mutationsMeta = useMeta(...mutationsKeys) as ChildMeta<M>;
 
   const callerRef = useRef(
     `${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
   );
 
-  const update = requestsEntries.reduce((acc, [storeName]) => {
-    acc[storeName] = (data: any) => {
-      store.setDataByKey(storeName, data);
+  const queries = queriesEntries.reduce((acc, [storeName, query]) => {
+    const meta = queriesMeta[storeName];
+
+    let data = {};
+
+    if (query.listName) {
+      const list = store.getDataByKey(query.listName);
+
+      if (list) {
+        data = list.map((key: string) => store.getDataByKey(key));
+      } else {
+        data = [];
+      }
+    } else if (query.key) {
+      data = store.getDataByKey(`${query.itemName}.${query.key}`);
+    } else {
+      data = store.getDataByKey(`${query.itemName}`);
+    }
+
+    acc[storeName] = {
+      data,
+      meta
     };
 
     return acc;
   }, {} as any);
 
   const mutations = mutationsEntries.reduce((acc, [storeName, func]) => {
-    acc[storeName] = async (...args: any[]) => {
-      const result = await store.call(
-        { [storeName]: func(...args).bind(null, store) },
-        true,
-        callerRef.current
-      );
+    const meta = mutationsMeta[storeName];
 
-      return result[storeName];
+    acc[storeName] = {
+      call: async (...args: any[]) => {
+        const result = await store.call(
+          { [storeName]: func.call(store, ...args) },
+          true,
+          callerRef.current
+        );
+
+        return result[storeName];
+      },
+      meta: meta,
+      data: store.getDataByKey(`${storeName}.${meta?.itemName}.${meta?.key}`)
     };
 
     return acc;
   }, {} as any);
 
-  const isReady = requestsEntries.every(
-    ([storeName]) => meta[storeName]?.isReady
+  const isReady = queriesEntries.every(
+    ([storeName]) => queriesMeta[storeName]?.isReady
   );
 
-  const errors: Error[] = requestsEntries
-    .map(([storeName]) => meta[storeName]?.error)
+  const errors: Error[] = queriesEntries
+    .map(([storeName]) => queriesMeta[storeName]?.error)
     .filter((v): v is Error => !!v);
 
-  const call = useMemo(
-    () => async (requests: Requests) => await store.call(requests, true),
-    []
-  );
-
   useEffect(() => {
-    store.call(props.requests);
+    store.call(props.queries);
 
     return () => {
       const oldMeta = store.getMeta();
@@ -123,7 +138,7 @@ export function Main<
       const oldData = store.getData();
 
       const newData = Object.keys(oldData).reduce<StateData>((acc, key) => {
-        if (oldMeta[key].callerKey !== callerRef.current) {
+        if (oldMeta[key]?.callerKey !== callerRef.current) {
           acc[key] = oldData[key];
         }
 
@@ -137,14 +152,11 @@ export function Main<
   return (
     <Content
       {...{
-        call,
-        data,
         isReady,
-        meta,
         children,
         errors,
-        update,
         mutations,
+        queries,
         renderLoader,
         renderErrors
       }}
