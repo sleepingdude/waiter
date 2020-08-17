@@ -89,7 +89,7 @@ export function createStore(): Store {
               isReady: false,
               queryName: storeName,
               listName: requestItem.listName,
-              itemName: requestItem.itemName,
+              objectName: requestItem.objectName,
               key: requestItem.key,
               keyPath: requestItem.keyPath,
               type: requestItem.type,
@@ -102,12 +102,14 @@ export function createStore(): Store {
               switch (requestItem.type) {
                 case Action.GET_OBJECT: {
                   dataFromCache = this.getDataByKey(
-                    `${requestItem.itemName}.${requestItem.key}`
+                    `${requestItem.objectName}.${requestItem.key}`
                   );
                   break;
                 }
                 case Action.CUSTOM_QUERY: {
-                  dataFromCache = this.getDataByKey(`${requestItem.itemName}`);
+                  dataFromCache = this.getDataByKey(
+                    `${requestItem.objectName}`
+                  );
                   break;
                 }
                 case Action.GET_LIST: {
@@ -115,7 +117,7 @@ export function createStore(): Store {
 
                   if (list) {
                     dataFromCache = list.map((key: string) =>
-                      this.getDataByKey(`${requestItem.itemName}.${key}`)
+                      this.getDataByKey(`${requestItem.objectName}.${key}`)
                     );
                   }
                   break;
@@ -153,19 +155,19 @@ export function createStore(): Store {
             switch (requestItem.type) {
               case Action.GET_OBJECT: {
                 this.setDataByKey(
-                  `${requestItem.itemName}.${requestItem.key}`,
+                  `${requestItem.objectName}.${requestItem.key}`,
                   result
                 );
                 break;
               }
               case Action.CUSTOM_QUERY: {
-                this.setDataByKey(`${requestItem.itemName}`, result);
+                this.setDataByKey(`${requestItem.objectName}`, result);
                 break;
               }
               case Action.GET_LIST: {
                 result.forEach((r: any) => {
                   this.setDataByKey(
-                    `${requestItem.itemName}.${r[requestItem.keyPath]}`,
+                    `${requestItem.objectName}.${r[requestItem.keyPath]}`,
                     r,
                     false
                   );
@@ -175,13 +177,13 @@ export function createStore(): Store {
                   `${requestItem.listName}`,
                   result.map(
                     (r: any) =>
-                      `${requestItem.itemName}.${r[requestItem.keyPath]}`
+                      `${requestItem.objectName}.${r[requestItem.keyPath]}`
                   )
                 );
                 break;
               }
               case Action.DELETE_OBJECT: {
-                const itemKey = `${requestItem.itemName}.${requestItem.key}`;
+                const itemKey = `${requestItem.objectName}.${requestItem.key}`;
                 const item = this.getDataByKey(itemKey);
 
                 this.setDataByKey(itemKey, { ...item, _DELETED_: true }, false);
@@ -197,7 +199,7 @@ export function createStore(): Store {
                 });
 
                 this.setDataByKey(
-                  `${storeName}.${requestItem.itemName}.${requestItem.key}`,
+                  `${storeName}.${requestItem.objectName}.${requestItem.key}`,
                   result
                 );
 
@@ -205,24 +207,24 @@ export function createStore(): Store {
               }
               case Action.UPDATE_OBJECT: {
                 this.setDataByKey(
-                  `${requestItem.itemName}.${requestItem.key}`,
+                  `${requestItem.objectName}.${requestItem.key}`,
                   result,
                   false
                 );
                 this.setDataByKey(
-                  `${storeName}.${requestItem.itemName}.${requestItem.key}`,
+                  `${storeName}.${requestItem.objectName}.${requestItem.key}`,
                   result
                 );
                 break;
               }
               case Action.CREATE_OBJECT: {
                 this.setDataByKey(
-                  `${requestItem.itemName}.${result[requestItem.keyPath]}`,
+                  `${requestItem.objectName}.${result[requestItem.keyPath]}`,
                   result,
                   false
                 );
                 this.setDataByKey(
-                  `${storeName}.${requestItem.itemName}.${
+                  `${storeName}.${requestItem.objectName}.${
                     result[requestItem.keyPath]
                   }`,
                   result
@@ -232,7 +234,7 @@ export function createStore(): Store {
               case Action.UPDATE_LIST: {
                 result.forEach((r: any) => {
                   this.setDataByKey(
-                    `${requestItem.itemName}.${r[requestItem.keyPath]}`,
+                    `${requestItem.objectName}.${r[requestItem.keyPath]}`,
                     r,
                     false
                   );
@@ -242,7 +244,7 @@ export function createStore(): Store {
                   `${requestItem.listName}`,
                   result.map(
                     (r: any) =>
-                      `${requestItem.itemName}.${r[requestItem.keyPath]}`
+                      `${requestItem.objectName}.${r[requestItem.keyPath]}`
                   )
                 );
 

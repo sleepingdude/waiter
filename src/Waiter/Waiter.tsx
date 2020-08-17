@@ -78,9 +78,9 @@ export function Main<
         data = [];
       }
     } else if (query.key) {
-      data = store.getDataByKey(`${query.itemName}.${query.key}`);
+      data = store.getDataByKey(`${query.objectName}.${query.key}`);
     } else {
-      data = store.getDataByKey(`${query.itemName}`);
+      data = store.getDataByKey(`${query.objectName}`);
     }
 
     acc[storeName] = {
@@ -105,7 +105,7 @@ export function Main<
         return result[storeName];
       },
       meta: meta,
-      data: store.getDataByKey(`${storeName}.${meta?.itemName}.${meta?.key}`)
+      data: store.getDataByKey(`${storeName}.${meta?.objectName}.${meta?.key}`)
     };
 
     return acc;

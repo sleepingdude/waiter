@@ -17,7 +17,7 @@ export type StateMetaItem = {
   callerKey: string;
   queryName: string;
   listName: string;
-  itemName: string;
+  objectName: string;
   key: string;
   keyPath: string;
   type: Action;
